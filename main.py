@@ -6,15 +6,13 @@ import threading
 import random
 import time
 
-# Global variables to store distances
 distance_front = 0
 distance_back = 0
 distance_left = 0
 distance_right = 0
 distance_backleft = 0
 distance_backright = 0
-lock = threading.Lock()
-#Bool variables
+
 Drivebool = 0
 Reversebool = 0
 Cruisebool = 0
@@ -24,7 +22,7 @@ def update_distance(direction):
     global distance_front, distance_back, distance_left, distance_right, distance_backleft, distance_backright
 
     while True:
-        random_distance = random.randint(1, 100)  # Generate a random distance
+        random_distance = random.randint(1, 100)
         with lock:
             if direction == 'front':
                 distance_front = random_distance
@@ -42,24 +40,24 @@ def update_distance(direction):
 def Get_char():
     global Drivebool
     global Reversebool
+    global Parkbool
+    global Cruisebool
 
-    key=input()
+    key = input()
     print(key)
-    if key == 'D' or 'd':
+    if key in ['D', 'd']:
         Drivebool = 1
-    elif key == 'P' or 'p':
+    elif key in ['P', 'p']:
         Parkbool = 1
-    elif key == 'R' or 'r':
+    elif key in ['R', 'r']:
         Reversebool = 1
-    elif key == 'C' or 'c':
+    elif key in ['C', 'c']:
         Cruisebool = 1
 
-
-
 def main():
-    print(Reversebool)
-    #if Drivebool:
-     #   Drive.Drive()
+    #print(Reversebool)
+    if Drivebool:
+        Drive.Drive()
     if Reversebool:
         Reverse.Reverse()
     if Parkbool:
@@ -67,9 +65,8 @@ def main():
     if Cruisebool:
         Cruise.Cruise()
 
-
-
 if __name__ == "__main__":
     Get_char()
     while True:
         main()
+

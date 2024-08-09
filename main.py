@@ -2,121 +2,71 @@ import Drive
 import Reverse
 import Park
 import Cruise
+import threading
 import random
 import time
-import threading
-import tkinter as tk
-import sys
-import keyboard  # Import the keyboard library
 
-# Global variables for distances and driving modes
-distances = {'front': 0, 'back': 0, 'frontleft': 0, 'frontright': 0, 'backleft': 0, 'backright': 0}
-modes = {'Drive': False, 'Reverse': False, 'Cruise': False, 'Park': False}
+distance_front = 0
+distance_back = 0
+distance_left = 0
+distance_right = 0
+distance_backleft = 0
+distance_backright = 0
 
-# Debug mode flag
-debug_mode = '--debug' in sys.argv
+Drivebool = 0
+Reversebool = 0
+Cruisebool = 0
+Parkbool = 0
 
-# Create Tkinter windows
-root = tk.Tk()
-root.title("Sensor Data Debug")
-root.geometry("300x200")
+def update_distance(direction):
+    global distance_front, distance_back, distance_left, distance_right, distance_backleft, distance_backright
 
-gear_window = tk.Tk()
-gear_window.title("Current Gear")
-gear_window.geometry("200x100")
-
-# Sensor data labels
-labels = {
-    'front': tk.Label(root, text=""),
-    'frontleft': tk.Label(root, text=""),
-    'frontright': tk.Label(root, text=""),
-    'backleft': tk.Label(root, text=""),
-    'backright': tk.Label(root, text=""),
-    'back': tk.Label(root, text="")
-}
-
-for i, key in enumerate(labels.keys()):
-    labels[key].pack()
-
-# Gear display label
-gear_label = tk.Label(gear_window, text="Current Gear: N/A")
-gear_label.pack()
-
-def update_distance(key):
-    global distances
-    random_distance = random.randint(1, 100)
-    distances[key] = random_distance
-
-def update_distances_threaded(gear):
-    global modes
-    threads = []
-
-    if gear == 'drive':
-        keys = ['front', 'frontleft', 'frontright', 'backleft', 'backright']
-    elif gear == 'reverse':
-        keys = ['back', 'backleft', 'backright']
-    elif gear == 'park':
-        keys = ['backleft', 'backright']
-    else:
-        return
-
-    for key in keys:
-        thread = threading.Thread(target=update_distance, args=(key,))
-        threads.append(thread)
-        thread.start()
-
-    for thread in threads:
-        thread.join()  # Ensure all threads complete before proceeding
-
-def handle_key_events():
-    global modes
     while True:
-        if keyboard.is_pressed('d'):
-            modes.update({'Drive': True, 'Reverse': False, 'Park': False, 'Cruise': False})
-        elif keyboard.is_pressed('p'):
-            modes.update({'Drive': False, 'Reverse': False, 'Park': True, 'Cruise': False})
-        elif keyboard.is_pressed('r'):
-            modes.update({'Drive': False, 'Reverse': True, 'Park': False, 'Cruise': False})
-        elif keyboard.is_pressed('c'):
-            modes.update({'Drive': False, 'Reverse': False, 'Park': False, 'Cruise': True})
-        time.sleep(0.1)  # Short delay to avoid high CPU usage
+        random_distance = random.randint(1, 100)
+        with lock:
+            if direction == 'front':
+                distance_front = random_distance
+            elif direction == 'back':
+                distance_back = random_distance
+            elif direction == 'left':
+                distance_left = random_distance
+            elif direction == 'right':
+                distance_right = random_distance
+            elif direction == 'backleft':
+                distance_backleft = random_distance
+            elif direction == 'backright':
+                distance_backright = random_distance
 
-# Print sensor data in the Tkinter window
-def print_sensor_data():
-    if debug_mode:
-        for key in distances:
-            labels[key].config(text=f"Distance from {key}: {distances[key]:.2f} cm")
-        root.update_idletasks()
+def Get_char():
+    global Drivebool
+    global Reversebool
+    global Parkbool
+    global Cruisebool
 
-def update_gear_display():
-    current_gear = next((gear for gear, active in modes.items() if active), 'N/A')
-    gear_label.config(text=f"Current Gear: {current_gear}")
-    gear_window.update_idletasks()
+    key = input()
+    print(key)
+    if key in ['D', 'd']:
+        Drivebool = 1
+    elif key in ['P', 'p']:
+        Parkbool = 1
+    elif key in ['R', 'r']:
+        Reversebool = 1
+    elif key in ['C', 'c']:
+        Cruisebool = 1
 
 def main():
-    global modes
-    if modes['Drive']:
-        update_distances_threaded("drive")
-        print_sensor_data()
-        Drive.Drive(distances['front'], distances['frontleft'], distances['frontright'], distances['backleft'], distances['backright'])
-    if modes['Reverse']:
-        update_distances_threaded("reverse")
-        print_sensor_data()
-        Reverse.Reverse(distances['backleft'], distances['backright'], distances['back'])
-    if modes['Park']:
-        update_distances_threaded("park")
-        print_sensor_data()
-        Park.Park(distances['backleft'], distances['backright'])
-    if modes['Cruise']:
+    print(Reversebool)
+    if Drivebool:
+        Drive.Drive()
+    if Reversebool:
+        Reverse.Reverse()
+    if Parkbool:
+        Park.Park()
+    if Cruisebool:
         Cruise.Cruise()
 
 if __name__ == "__main__":
-    # Start the key event handling in a separate thread
-    key_event_thread = threading.Thread(target=handle_key_events, daemon=True)
-    key_event_thread.start()
-
-    # Main loop
+    Get_char()
     while True:
         main()
-        update_gear_display()
-        time.sleep(0.1)  # Adding a small delay to simulate real-time updates
+        break

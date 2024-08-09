@@ -2,71 +2,64 @@ import Drive
 import Reverse
 import Park
 import Cruise
-import threading
 import random
 import time
+import threading
 
-distance_front = 0
-distance_back = 0
-distance_left = 0
-distance_right = 0
-distance_backleft = 0
-distance_backright = 0
+# Global variables for distances and driving modes
+distances = {'front': 0, 'back': 0, 'frontleft': 0, 'frontright': 0, 'backleft': 0, 'backright': 0}
+modes = {'Drive': False, 'Reverse': False, 'Cruise': False, 'Park': False}
 
-Drivebool = 0
-Reversebool = 0
-Cruisebool = 0
-Parkbool = 0
+# Create a barrier for synchronization
+#barrier = threading.Barrier(3)  # Number of threads to synchronize
 
-def update_distance(direction):
-    global distance_front, distance_back, distance_left, distance_right, distance_backleft, distance_backright
+def update_distance(key):
+    global distances
+    random_distance = random.randint(1, 100)
+    distances[key] = random_distance
+    #barrier.wait()  # Wait for all threads to reach this point
 
-    while True:
-        random_distance = random.randint(1, 100)
-        with lock:
-            if direction == 'front':
-                distance_front = random_distance
-            elif direction == 'back':
-                distance_back = random_distance
-            elif direction == 'left':
-                distance_left = random_distance
-            elif direction == 'right':
-                distance_right = random_distance
-            elif direction == 'backleft':
-                distance_backleft = random_distance
-            elif direction == 'backright':
-                distance_backright = random_distance
+def update_distances_threaded(gear):
+    threads = []
+
+    if gear == 'drive':
+        keys = ['front', 'frontleft', 'frontright', 'backleft', 'backright']
+    elif gear == 'reverse':
+        keys = ['back', 'backleft', 'backright']
+    elif gear == 'park':
+        keys = ['backleft', 'backright']
+    else:
+        return
+
+    for key in keys:
+        thread = threading.Thread(target=update_distance, args=(key,))
+        threads.append(thread)
+        thread.start()
+
+    for thread in threads:
+        thread.join()  # Ensure all threads complete before proceeding
 
 def Get_char():
-    global Drivebool
-    global Reversebool
-    global Parkbool
-    global Cruisebool
-
-    key = input()
-    print(key)
-    if key in ['D', 'd']:
-        Drivebool = 1
-    elif key in ['P', 'p']:
-        Parkbool = 1
-    elif key in ['R', 'r']:
-        Reversebool = 1
-    elif key in ['C', 'c']:
-        Cruisebool = 1
+    key = input().strip().upper()
+    if key in ['D', 'P', 'R', 'C']:
+        modes.update({mode: key == mode[0] for mode in modes})
 
 def main():
-    #print(Reversebool)
-    if Drivebool:
-        Drive.Drive()
-    if Reversebool:
-        Reverse.Reverse()
-    if Parkbool:
-        Park.Park()
-    if Cruisebool:
+    if modes['Drive']:
+        update_distances_threaded("drive")
+        Drive.Drive(distances['front'], distances['frontleft'], distances['frontright'], distances['backleft'], distances['backright'])
+    if modes['Reverse']:
+        update_distances_threaded("reverse")
+        Reverse.Reverse(distances['backleft'], distances['backright'], distances['back'])
+    if modes['Park']:
+        update_distances_threaded("park")
+        Park.Park(distances['backleft'], distances['backright'])
+    if modes['Cruise']:
         Cruise.Cruise()
 
 if __name__ == "__main__":
-    Get_char()
+    Get_char()  # Get the driving mode input from the user
+
     while True:
         main()
-
+        time.sleep(0.1)  # Adding a small delay to simulate real-time updates

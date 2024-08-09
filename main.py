@@ -16,23 +16,31 @@ modes = {'Drive': False, 'Reverse': False, 'Cruise': False, 'Park': False}
 # Debug mode flag
 debug_mode = '--debug' in sys.argv
 
-# Create a Tkinter window for debugging
-if debug_mode:
-    root = tk.Tk()
-    root.title("Sensor Data Debug")
-    root.geometry("300x200")
+# Create Tkinter windows
+root = tk.Tk()
+root.title("Sensor Data Debug")
+root.geometry("300x200")
 
-    labels = {
-        'front': tk.Label(root, text=""),
-        'frontleft': tk.Label(root, text=""),
-        'frontright': tk.Label(root, text=""),
-        'backleft': tk.Label(root, text=""),
-        'backright': tk.Label(root, text=""),
-        'back': tk.Label(root, text="")
-    }
+gear_window = tk.Tk()
+gear_window.title("Current Gear")
+gear_window.geometry("200x100")
 
-    for i, key in enumerate(labels.keys()):
-        labels[key].pack()
+# Sensor data labels
+labels = {
+    'front': tk.Label(root, text=""),
+    'frontleft': tk.Label(root, text=""),
+    'frontright': tk.Label(root, text=""),
+    'backleft': tk.Label(root, text=""),
+    'backright': tk.Label(root, text=""),
+    'back': tk.Label(root, text="")
+}
+
+for i, key in enumerate(labels.keys()):
+    labels[key].pack()
+
+# Gear display label
+gear_label = tk.Label(gear_window, text="Current Gear: N/A")
+gear_label.pack()
 
 def update_distance(key):
     global distances
@@ -80,6 +88,11 @@ def print_sensor_data():
             labels[key].config(text=f"Distance from {key}: {distances[key]:.2f} cm")
         root.update_idletasks()
 
+def update_gear_display():
+    current_gear = next((gear for gear, active in modes.items() if active), 'N/A')
+    gear_label.config(text=f"Current Gear: {current_gear}")
+    gear_window.update_idletasks()
+
 def main():
     global modes
     if modes['Drive']:
@@ -105,4 +118,5 @@ if __name__ == "__main__":
     # Main loop
     while True:
         main()
+        update_gear_display()
         time.sleep(0.1)  # Adding a small delay to simulate real-time updates

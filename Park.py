@@ -85,3 +85,5 @@ def Park(backleft, backright):
     digitalWrite('motor1I2', 0)
     analogWrite('motor2I1', 0)
     digitalWrite('motor2I2', 0)
+
+    return batteryPercentage  # Return the battery percentage

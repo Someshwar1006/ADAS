@@ -1,117 +1,134 @@
-import random
-import threading
 import time
+import random
 
-distance_front = 0
-distance_front_left = 0
-distance_front_right = 0
-distance_back = 0
-distance_back_left = 0
-distance_back_right = 0
-
-stopflag = False
-lanebool = False
-ACC = False
-dist1 = 30
-dist2 = 20
-dist3 = 10
-dist4 = 5
-anglelt = 180
-anglert = 0
-cruiseSpeed = 50
-
-def readDistance(sensor):
-    return random.randint(1, 100)
-
-def steer(angle):
-    print(f"Steer set to {angle} degrees")
-
+# Simulate hardware components (placeholders for actual hardware control)
 def moveForward():
-    print("Moving forward")
+    print("Moving Forward")
+
+def moveBack():
+    print("Moving Backward")
+
+def turnLeft():
+    print("Turning Left")
+
+def turnRight():
+    print("Turning Right")
 
 def stopMotors():
-    global stopflag
-    stopflag = True
-    print("Motors stopped")
-
-def startMotors():
-    motorSpeed = cruiseSpeed * 2.55 
-    print(f"Motors started at speed {motorSpeed}")
+    print("Motors Stopped")
 
 def lanecenter():
-    print("Centering lane")
+    print("Centering Lane")
 
 def adaptiveCruiseControl():
-    print("Adaptive Cruise Control activated")
+    print("Adaptive Cruise Control")
 
-def lcd_clear():
-    print("LCD cleared")
+# Global variable to track brake application time
+last_brake_time = 0
 
-def lcd_setCursor(x, y):
-    print(f"LCD cursor set to {x}, {y}")
+def Drive(front, frontleft, frontright, backleft, backright, man_flag, direction):
+    global last_brake_time
+    current_time = time.time()
+    # Check if brakes were applied recently
+    if last_brake_time and (current_time - last_brake_time < 2):
+        if direction in ['Forward', 'Backward', 'Left', 'Right']:
+            print(f"Movement {direction} is temporarily disabled due to recent braking.")
+            return
 
-def lcd_print(message):
-    print(f"LCD message: {message}")
 
-def Wire_beginTransmission(address):
-    print(f"Starting transmission to {address}")
+    if man_flag == 1:
+        # Manual mode
+        if direction == 'Forward':
+            moveForward()
+        elif direction == 'Backward':
+            moveBack()
+        elif direction == 'Left':
+            turnLeft()
+        elif direction == 'Right':
+            turnRight()
+        #elif direction == 'None':
+            #return 0
+       # else:
+          # print("Invalid Direction in Manual Mode")
+       # return
 
-def Wire_write(message):
-    print(f"Sending message: {message}")
+    # Automatic mode
+    # Example constants for distances
+    dist1 = 50
+    dist2 = 30
+    dist3 = 20
+    dist4 = 10
+    distl = 15
+    distr = 15
 
-def Wire_endTransmission():
-    print("Ending transmission")
-
-def drive():
-    global stopflag
-
-    if lanebool:
-        lanecenter()
-    if ACC:
-        adaptiveCruiseControl()
-    if not stopflag:
-        moveForward()
-
-    distance_front = readDistance('ultrasonicfr')
-    distance_front_left = readDistance('ultrasonicfrleft')
-    distance_front_right = readDistance('ultrasonicfrright')
-
-    print(f"Distance front: {distance_front} cm")
-    print(f"Distance front left: {distance_front_left} cm")
-    print(f"Distance front right: {distance_front_right} cm")
-
-    lcd_clear()
-    lcd_setCursor(0, 0)
-    lcd_print("Gear : D")
-
-    if distance_front > dist1:
-        lcd_setCursor(0, 1)
-        lcd_print("Lead Clear")
-        Wire_beginTransmission(9)
-        Wire_write("4")
-        Wire_endTransmission()
-        print("Front Ext")
-    elif dist2 <= distance_front < dist1:
+    # Example decisions based on distances
+    brakes_applied = False
+    if front > dist1:
+        print("Lead Clear")
+    elif dist1 >= front > dist2:
         print("Front1")
-        Wire_beginTransmission(9)
-        Wire_write("1")
-        Wire_endTransmission()
-    elif dist3 < distance_front < dist2:
+    elif dist2 >= front > dist3:
         print("Front2")
-        stopMotors()
-        Wire_beginTransmission(9)
-        Wire_write("2")
-        Wire_endTransmission()
-    elif distance_front <= dist3:
+        brakes_applied = True
+    elif front <= dist3:
         print("Front3")
-        if distance_front_left > dist4 or distance_front_right > dist4:
-            if distance_front_left > distance_front_right:
-                steer(anglelt)
-            elif distance_front_left < distance_front_right:
-                steer(anglert)
+        if frontleft > distl or frontright > distr:
+            if frontleft > frontright:
+                print("Turning Left")
+            elif frontleft < frontright:
+                print("Turning Right")
             else:
-                steer(90)
+                print("Going Straight")
+        brakes_applied = True
+
+    # Front Left
+    if frontleft > dist1:
+        print("Front Left1")
+    elif dist1 >= frontleft > dist2:
+        print("Front Left2")
+    elif dist2 >= frontleft > dist3:
+        print("Front Left - Brakes Applied")
+        brakes_applied = True
+    elif frontleft <= dist4:
+        print("Front Left - Steering Adjusted")
+        brakes_applied = True
+
+    # Front Right
+    if frontright > dist1:
+        print("Front Right1")
+    elif dist1 >= frontright > dist2:
+        print("Front Right2")
+    elif dist2 >= frontright > dist3:
+        print("Front Right - Brakes Applied")
+        brakes_applied = True
+    elif frontright <= dist4:
+        print("Front Right - Steering Adjusted")
+        brakes_applied = True
+
+    # Back Left
+    if backleft > dist1:
+        print("Back Left Ext")
+    elif dist1 >= backleft > dist2:
+        print("Back Left")
+    elif dist2 >= backleft > dist3:
+        print("Back Left - Brakes Applied")
+        brakes_applied = True
+    elif backleft <= dist4:
+        print("Back Left - Steering Adjusted")
+        brakes_applied = True
+
+    # Back Right
+    if backright > dist1:
+        print("Back Right Ext")
+    elif dist1 >= backright > dist2:
+        print("Back Right")
+    elif dist2 >= backright > dist3:
+        print("Back Right - Brakes Applied")
+        brakes_applied = True
+    elif backright <= dist4:
+        print("Back Right - Steering Adjusted")
+        brakes_applied = True
+
+    if brakes_applied:
         stopMotors()
-        Wire_beginTransmission(9)
-        Wire_write("3")
-        Wire_endTransmission()
+        last_brake_time = current_time
